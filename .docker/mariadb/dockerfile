@@ -1,0 +1,5 @@
+# Use the official MariaDB image as a base
+FROM mariadb:latest
+
+# Copy your custom my.cnf to the appropriate location
+COPY my.cnf /etc/mysql/conf.d/my.cnf

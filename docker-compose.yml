@@ -1,0 +1,28 @@
+version: '3'
+
+
+services:
+  dmb-php-app:
+    image: laravel:latest
+    container_name: laravel-app
+    volumes:
+      - ./laravel-app:/var/www/html
+    ports:
+      - "8000:80"
+
+  mariadb:
+    image: mariadb
+    # environment:
+    #   MYSQL_ROOT_PASSWORD: password
+    #   MYSQL_DATABASE: mydatabase
+    #   MYSQL_USER: user
+    #   MYSQL_PASSWORD: password
+    env_file:
+        - config/dev.env
+    volumes:
+      - data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  data:
