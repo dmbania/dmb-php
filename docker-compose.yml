@@ -2,13 +2,13 @@ version: '3'
 
 
 services:
-#   dmb-php-app:
-#     image: laravel:latest
-#     container_name: laravel-app
-#     volumes:
-#       - ./laravel-app:/var/www/html
-#     ports:
-#       - "8000:80"
+  dmb-php-app:
+    image: bitnami/laravel:latest
+    container_name: laravel-app
+    volumes:
+      - ./laravel-app:/var/www/html
+    ports:
+      - "8000:80"
 
   mariadb:
     image: mariadb
