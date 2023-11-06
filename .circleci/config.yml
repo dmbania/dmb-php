@@ -2,9 +2,9 @@ version: 2.1
 
 jobs:
   build:
-    working_directory: /var/www/html
+    working_directory: /projects
     docker:
-      - image: php:7.1-apache
+      - image: php:8.2-apache
         environment:
           APP_ENV: test
     steps:
