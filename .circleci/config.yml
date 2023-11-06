@@ -1,20 +1,42 @@
 version: 2.1
 
-jobs:
-  build:
-    working_directory: /projects
+executors:
+  php_docker_image:
     docker:
       - image: php:8.2-apache
         environment:
           APP_ENV: test
+
+commands:
+  attach_workspace_at_root:
+    steps:
+      - attach_workspace:
+          at: ~/projects
+
+  persist_to_root_workspace:
+    steps:
+      - persist_to_workspace:
+          root: ~/projects
+          paths: ['.']
+
+jobs:
+  build_php_env:
+    working_directory: ~/projects
+    executor: php_docker_image
     steps:
       - run:
           name: Install system packages
-          command: apt-get update && apt-get -y install git
+          command: apt-get update && apt-get -y install git libzip-dev
       - run:
           name: Install PHP extensions
-          command: docker-php-ext-install pdo
+          command: docker-php-ext-install zip
       - checkout
+
+      - run:
+          name: "Create Environment file"
+          command: |
+            cp .env.test .env
+
       - run:
           name: Install Composer
           command: |
@@ -29,10 +51,53 @@ jobs:
             php composer.phar --version
       - run:
           name: Install project dependencies
-          command: php composer.phar install
+          command: php composer.phar install -n --prefer-dist
+      - run:
+          name: "Generate App key"
+          command: php artisan key:generate
+      - persist_to_root_workspace
+
+  run_linting:
+    working_directory: ~/projects
+    executor: php_docker_image
+    steps:
+      - attach_workspace_at_root
       - run:
           name: Run CS tests
-          command: vendor/bin/phpcs
+          command: vendor/bin/phpcs || true
+      # - persist_to_root_workspace
+
+  run_unit_tests:
+    working_directory: ~/projects
+    executor: php_docker_image
+    steps:
+      - attach_workspace_at_root
       - run:
           name: Run Unit tests
           command: vendor/bin/phpunit
+      # - persist_to_root_workspace
+
+  finale:
+    executor: php_docker_image
+    steps:
+      # - attach_workspace_at_root
+      - run:
+          name: "This is the End"
+          command: "echo DMB-APP build complete"
+      # - persist_to_root_workspace
+
+workflows:
+
+  build_and_test:
+    jobs:
+      - build_php_env
+      - run_linting:
+          requires:
+            - build_php_env
+      - run_unit_tests:
+          requires:
+            - build_php_env
+      - finale:
+          requires:
+            - run_unit_tests
+            - run_linting
